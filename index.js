@@ -1,6 +1,6 @@
 // The provided course information.
 const CourseInfo = {
-	id: 450,
+	id: 451,
 	name: "Introduction to JavaScript",
 };
 
@@ -15,7 +15,7 @@ const AssignmentGroup = {
 			id: 1,
 			name: "Declare a Variable",
 			due_at: "2023-01-25",
-			points_possible: 50,
+			points_possible: 0,
 		},
 		{
 			id: 2,
@@ -107,6 +107,9 @@ function getLearnerData(course, ag, submissions) {
 					assignment = assignments[i];
 					due = assignments[i].due_at;
 				}
+			}
+			if (assignment.points_possible <= 0) {
+				throw new Error("Points_possible is too low");
 			}
 
 			//find today's date in same format
