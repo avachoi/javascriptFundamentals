@@ -1,6 +1,6 @@
 // The provided course information.
 const CourseInfo = {
-	id: 451,
+	id: 450,
 	name: "Introduction to JavaScript",
 };
 
@@ -76,91 +76,83 @@ const LearnerSubmissions = [
 	},
 ];
 
-//   function getLearnerData(course, ag, submissions) {
-//     // here, we would process this data to achieve the desired result.
-//     const result = [
-//       {
-//         id: 125,
-//         avg: 0.985, // (47 + 150) / (50 + 150)
-//         1: 0.94, // 47 / 50
-//         2: 1.0 // 150 / 150
-//       },
-//       {
-//         id: 132,
-//         avg: 0.82, // (39 + 125) / (50 + 150)
-//         1: 0.78, // 39 / 50
-//         2: 0.833 // late: (140 - 15) / 150
-//       }
-//     ];
-
-//     return result;
-//   }
-
-//   const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
-
-//   console.log(result);
-
 function getLearnerData(course, ag, submissions) {
-	let result = [];
-	let current = {};
-	for (let i = 0; i < submissions.length; i++) {
-		let learner = submissions[i];
-
-		//adding new learnerRecord
-		if (!result[learner.learner_id]) {
-			result[learner.learner_id] = { id: learner.learner_id, avg: 0 };
+	try {
+		if (course.id !== ag.course_id) {
+			throw new Error("AssignmentGroup does not belong to its course");
 		}
-		current = result[learner.learner_id];
+		let result = [];
+		let current = {};
+		for (let i = 0; i < submissions.length; i++) {
+			let learner = submissions[i];
 
-		//find the assignment and the due date
-		let assignmentId = learner.assignment_id;
-		let assignments = AssignmentGroup.assignments;
-		let assignment = {};
-		let due = "";
-		for (let i = 0; i < assignments.length; i++) {
-			if (assignmentId === assignments[i].id) {
-				assignment = assignments[i];
-				due = assignments[i].due_at;
+			//adding new learnerRecord
+			if (!result[learner.learner_id]) {
+				result[learner.learner_id] = {
+					id: learner.learner_id,
+					avg: 0,
+					totalScore: 0,
+					totalPossible: 0,
+				};
 			}
-		}
+			current = result[learner.learner_id];
 
-		//find today's date in same format
-		function formatDate(date) {
-			const year = date.getFullYear();
-			const month = String(date.getMonth() + 1).padStart(2, "0");
-			const day = String(date.getDate()).padStart(2, "0");
-			return `${year}-${month}-${day}`;
-		}
-
-		const today = new Date();
-		const formattedDate = formatDate(today);
-
-		//adding new result of an assignment
-		let score = learner.submission.score;
-		if (formattedDate < due) {
-			continue;
-		} else if (due < learner.submission.submitted_at) {
-			console.log("late!");
-			score -= assignment.points_possible * 0.1;
-		}
-		current[learner.assignment_id] = Number(
-			Math.round(score / assignment.points_possible).toFixed(3)
-		);
-
-		//adding average
-		let total = 0;
-		let nOfScores = Object.keys(current).length - 2;
-		for (key in current) {
-			if (Number(key) / 1) {
-				total += current[key];
-				console.log("total", total);
+			//find the assignment and the due date
+			let assignmentId = learner.assignment_id;
+			let assignments = AssignmentGroup.assignments;
+			let assignment = {};
+			let due = "";
+			for (let i = 0; i < assignments.length; i++) {
+				if (assignmentId === assignments[i].id) {
+					assignment = assignments[i];
+					due = assignments[i].due_at;
+				}
 			}
+
+			//find today's date in same format
+			function formatDate(date) {
+				const year = date.getFullYear();
+				const month = String(date.getMonth() + 1).padStart(2, "0");
+				const day = String(date.getDate()).padStart(2, "0");
+				return `${year}-${month}-${day}`;
+			}
+
+			const today = new Date();
+			const formattedDate = formatDate(today);
+
+			//adding new result of an assignment
+			let score = learner.submission.score;
+			if (formattedDate < due) {
+				continue;
+			} else if (due < learner.submission.submitted_at) {
+				score -= assignment.points_possible * 0.1;
+			}
+			current[learner.assignment_id] = Number(
+				(score / assignment.points_possible).toFixed(3)
+			);
+
+			//adding average
+			current.totalScore += score;
+			current.totalPossible += assignment.points_possible;
+			current.avg = current.totalScore / current.totalPossible;
 		}
-		current.avg = total / nOfScores;
+		return result;
+	} catch (error) {
+		console.log(error.message);
+		return [];
 	}
-	return result;
 }
 
-const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
+const resultBeforeFiltered = getLearnerData(
+	CourseInfo,
+	AssignmentGroup,
+	LearnerSubmissions
+);
+const resultBeforeTrim = resultBeforeFiltered.filter((obj) => obj.id);
 
-console.log(result);
+const result = resultBeforeTrim.map((obj) => {
+	const { totalScore, totalPossible, ...rest } = obj;
+	return rest;
+});
+
+console.log("result", result);
