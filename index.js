@@ -15,7 +15,7 @@ const AssignmentGroup = {
 			id: 1,
 			name: "Declare a Variable",
 			due_at: "2023-01-25",
-			points_possible: 0,
+			points_possible: 50,
 		},
 		{
 			id: 2,
@@ -102,10 +102,10 @@ function getLearnerData(course, ag, submissions) {
 			let assignments = AssignmentGroup.assignments;
 			let assignment = {};
 			let due = "";
-			for (let i = 0; i < assignments.length; i++) {
-				if (assignmentId === assignments[i].id) {
-					assignment = assignments[i];
-					due = assignments[i].due_at;
+			for (const i of assignments) {
+				if (assignmentId === i.id) {
+					assignment = i;
+					due = i.due_at;
 				}
 			}
 			if (assignment.points_possible <= 0) {
